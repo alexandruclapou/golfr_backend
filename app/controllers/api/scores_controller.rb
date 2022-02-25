@@ -37,6 +37,22 @@ module Api
       }
     end
 
+    def index
+      user = User.find_by('id = ?', params[:user_id])
+      if user.blank?
+        render json: {
+          errors: [
+            'Invalid user'
+          ]
+        }, status: :bad_request
+        return
+      end
+      user_scores = user.scores
+      render json: {
+        scores: user_scores
+      }.to_json
+    end
+
     private
 
     def score_params

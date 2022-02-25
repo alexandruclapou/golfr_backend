@@ -2,7 +2,7 @@ require 'rails_helper'
 
 describe Api::ScoresController, type: :request do
   before :each do
-    @user1 = create(:user, name: 'User1', email: 'user1@email.com', password: 'userpass')
+    @user1 = create(:user, id: 0, name: 'User1', email: 'user1@email.com', password: 'userpass')
     user2 = create(:user, name: 'User2', email: 'user2@email.com', password: 'userpass')
     sign_in(@user1, scope: :user)
 
@@ -102,6 +102,29 @@ describe Api::ScoresController, type: :request do
 
       expect(response).not_to have_http_status(:ok)
       expect(Score.count).to eq score_count
+    end
+  end
+
+  describe 'GET index' do
+    it 'should return unathorized if the user is not logged in' do
+      sign_out(@user1)
+      get api_user_scores_path(0)
+      expect(response).to have_http_status(401)
+    end
+
+    it 'should return error if the user does not exist' do
+      get api_user_scores_path(99)
+      expect(response).to have_http_status(400)
+    end
+
+    it 'should return the scores of the user if the user exist' do
+      get api_user_scores_path(0)
+      expect(response).to have_http_status(200)
+      response_hash = JSON.parse(response.body)
+      scores = response_hash['scores']
+      expect(scores.length).to eq 1
+      score = scores[0]
+      expect(score['id']).to eq @score1.id
     end
   end
 end
